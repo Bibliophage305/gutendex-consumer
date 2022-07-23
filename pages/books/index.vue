@@ -10,9 +10,7 @@
                   <template v-slot:default="{ open }">
                     <v-row justify="center" align="center">
                       <v-col cols="auto">
-                        <v-card-title>
-                          Filters
-                        </v-card-title>
+                        <v-card-title> Filters </v-card-title>
                       </v-col>
                       <v-col>
                         <v-fade-transition leave-absolute>
@@ -36,9 +34,16 @@
                       chips
                       deletable-chips
                     />
-                    <template v-for="filter in filters.filter(filter => activeFilters.includes(filter.name))">
+                    <template
+                      v-for="filter in filters.filter((filter) =>
+                        activeFilters.includes(filter.name)
+                      )"
+                    >
                       <v-select
-                        v-if="filter.type === 'select' && filter.searchable === false"
+                        v-if="
+                          filter.type === 'select' &&
+                          filter.searchable === false
+                        "
                         :key="filter.name"
                         :items="filter.options"
                         v-model="filter.value"
@@ -50,7 +55,9 @@
                         deletable-chips
                       />
                       <v-autocomplete
-                        v-else-if="filter.type === 'select' && filter.searchable === true"
+                        v-else-if="
+                          filter.type === 'select' && filter.searchable === true
+                        "
                         :key="filter.name"
                         :items="filter.options"
                         v-model="filter.value"
@@ -84,24 +91,16 @@
       <v-row v-if="$fetchState.pending">
         <v-col>
           <v-card loading>
-            <v-card-title>
-              Fetching books
-            </v-card-title>
-            <v-card-text>
-              Getting them from the api
-            </v-card-text>
+            <v-card-title> Fetching books </v-card-title>
+            <v-card-text> Getting them from the api </v-card-text>
           </v-card>
         </v-col>
       </v-row>
       <v-row v-else-if="$fetchState.error">
         <v-col>
           <v-card>
-            <v-card-title>
-              There was a problem
-            </v-card-title>
-            <v-card-text>
-              It broke
-            </v-card-text>
+            <v-card-title> There was a problem </v-card-title>
+            <v-card-text> It broke </v-card-text>
           </v-card>
         </v-col>
       </v-row>
@@ -331,49 +330,59 @@ export default {
             { text: 'Zulu', value: 'zu' },
           ],
           value: [],
-        }
+        },
       ],
       activeFilters: [],
     }
   },
 
   async fetch() {
-    let url = new URL('https://gutendex.com/books');
+    let url = new URL('https://gutendex.com/books')
     for (let filter of this.filters) {
       if (this.activeFilters.includes(filter.name) && filter.value) {
-        url.searchParams.append(filter.name, filter.value);
+        url.searchParams.append(filter.name, filter.value)
       }
     }
-    const data = await this.getBooks(url);
-    this.books = data.results;
-    this.nextUrl = data.next;
-    this.bookTotal = data.count;
+    const data = await this.getBooks(url)
+    this.books = data.results
+    this.nextUrl = data.next
+    this.bookTotal = data.count
   },
 
   computed: {
     filterSentence() {
       if (this.activeFilters.length === 0) {
-        return 'No filters active';
+        return 'No filters active'
       }
-      return 'Active filters: '+this.filters.filter(filter => this.activeFilters.includes(filter.name)).map(filter => filter.title).join(', ');
+      return (
+        'Active filters: ' +
+        this.filters
+          .filter((filter) => this.activeFilters.includes(filter.name))
+          .map((filter) => filter.title)
+          .join(', ')
+      )
     },
   },
 
   methods: {
     async getBooks(url) {
-      this.allowLoading = false;
-      const response = await fetch(url);
-      const data = await response.json();
-      console.log(data);
-      this.allowLoading = true;
-      return data;
+      this.allowLoading = false
+      const response = await fetch(url)
+      const data = await response.json()
+      console.log(data)
+      this.allowLoading = true
+      return data
     },
 
     async intersect(entries) {
-      if (this.allowLoading && entries[0].isIntersecting && this.nextUrl != null) {
-        const data = await this.getBooks(this.nextUrl);
-        this.books = this.books.concat(data.results);
-        this.nextUrl = data.next;
+      if (
+        this.allowLoading &&
+        entries[0].isIntersecting &&
+        this.nextUrl != null
+      ) {
+        const data = await this.getBooks(this.nextUrl)
+        this.books = this.books.concat(data.results)
+        this.nextUrl = data.next
       }
     },
   },

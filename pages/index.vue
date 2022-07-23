@@ -9,7 +9,8 @@
             </v-card-title>
             <v-card-text>
               <p>
-                This is a project to try out Nuxt and Vuetify. It's a simple app that allows you to query the Gutendex API.
+                This is a project to try out Nuxt and Vuetify. It's a simple app
+                that allows you to query the Gutendex API.
               </p>
               <p>
                 For more information on the Gutendex API, see the
