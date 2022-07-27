@@ -4,87 +4,99 @@
       <v-row>
         <v-col>
           <v-card>
-            <v-expansion-panels>
-              <v-expansion-panel>
-                <v-expansion-panel-header>
-                  <template v-slot:default="{ open }">
-                    <v-row justify="center" align="center">
-                      <v-col cols="auto">
-                        <v-card-title> Filters </v-card-title>
-                      </v-col>
-                      <v-col>
-                        <v-fade-transition leave-absolute>
-                          <v-card-subtitle v-if="!open">
-                            {{ filterSentence }}
-                          </v-card-subtitle>
-                        </v-fade-transition>
-                      </v-col>
-                    </v-row>
-                  </template>
-                </v-expansion-panel-header>
-                <v-expansion-panel-content>
-                  <v-card-text>
-                    <v-select
-                      :items="filters"
-                      v-model="activeFilters"
-                      multiple
-                      item-text="title"
-                      item-value="name"
-                      label="Choose active filters"
-                      chips
-                      deletable-chips
-                    />
-                    <template
-                      v-for="filter in filters.filter((filter) =>
-                        activeFilters.includes(filter.name)
-                      )"
-                    >
-                      <v-select
-                        v-if="
-                          filter.type === 'select' &&
-                          filter.searchable === false
-                        "
-                        :key="filter.name"
-                        :items="filter.options"
-                        v-model="filter.value"
-                        :multiple="filter.multiple"
-                        item-text="text"
-                        item-value="value"
-                        :label="filter.title"
-                        :chips="filter.multiple"
-                        deletable-chips
-                      />
-                      <v-autocomplete
-                        v-else-if="
-                          filter.type === 'select' && filter.searchable === true
-                        "
-                        :key="filter.name"
-                        :items="filter.options"
-                        v-model="filter.value"
-                        :multiple="filter.multiple"
-                        item-text="text"
-                        item-value="value"
-                        :label="filter.title"
-                        :chips="filter.multiple"
-                        deletable-chips
-                      />
-                      <v-text-field
-                        v-else
-                        :key="filter.name"
-                        v-model="filter.value"
-                        :label="filter.title"
-                        :type="filter.type"
-                      />
-                    </template>
-                  </v-card-text>
-                  <v-card-actions>
-                    <span>{{ bookTotal }} books found</span>
-                    <v-spacer />
-                    <v-btn color="primary" @click="$fetch"> Search </v-btn>
-                  </v-card-actions>
-                </v-expansion-panel-content>
-              </v-expansion-panel>
-            </v-expansion-panels>
+            <v-card-title>
+              Filters
+              <v-spacer />
+              <v-menu left :close-on-content-click="closeOnContentClick">
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn color="primary" dark v-bind="attrs" v-on="on">
+                    <v-icon left> mdi-plus </v-icon>
+                    Add Filter
+                  </v-btn>
+                </template>
+
+                <v-list>
+                  <v-list-item v-if="!filters.length">
+                    <v-list-item-title> No more filters </v-list-item-title>
+                  </v-list-item>
+                  <v-list-item
+                    v-for="filter in inactiveFilters"
+                    :key="filter.name"
+                  >
+                    <v-list-item-title>{{ filter.title }}</v-list-item-title>
+                    <v-list-item-action>
+                      <v-btn icon @click="activeFilters.push(filter.name)">
+                        <v-icon> mdi-plus </v-icon>
+                      </v-btn>
+                    </v-list-item-action>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+            </v-card-title>
+            <v-card-text>
+              <v-list-item
+                v-for="filter in filters.filter((filter) =>
+                  activeFilters.includes(filter.name)
+                )"
+                :key="filter.name"
+              >
+                <v-select
+                  v-if="filter.type === 'select' && filter.searchable === false"
+                  :items="filter.options"
+                  v-model="filter.value"
+                  :multiple="filter.multiple"
+                  item-text="text"
+                  item-value="value"
+                  :label="filter.title"
+                  :chips="filter.multiple"
+                  deletable-chips
+                />
+                <v-autocomplete
+                  v-else-if="
+                    filter.type === 'select' && filter.searchable === true
+                  "
+                  :items="filter.options"
+                  v-model="filter.value"
+                  :multiple="filter.multiple"
+                  item-text="text"
+                  item-value="value"
+                  :label="filter.title"
+                  :chips="filter.multiple"
+                  deletable-chips
+                />
+                <v-text-field
+                  v-else
+                  v-model="filter.value"
+                  :label="filter.title"
+                  :type="filter.type"
+                />
+                <v-list-item-action>
+                  <v-btn
+                    icon
+                    @click="
+                      activeFilters = activeFilters.filter(
+                        (n) => n !== filter.name
+                      )
+                    "
+                  >
+                    <v-icon> mdi-close </v-icon>
+                  </v-btn>
+                </v-list-item-action>
+              </v-list-item>
+            </v-card-text>
+            <v-card-actions>
+              <span v-if="!$fetchState.pending && $fetchState.error === null"
+                >{{ bookTotal }} books found</span
+              >
+              <v-spacer />
+              <v-btn
+                color="primary"
+                :disabled="$fetchState.pending"
+                @click="$fetch"
+              >
+                Search
+              </v-btn>
+            </v-card-actions>
           </v-card>
         </v-col>
       </v-row>
@@ -134,6 +146,7 @@ export default {
       nextUrl: null,
       bookTotal: 0,
       allowLoading: true,
+      filterListVisible: false,
       filters: [
         {
           name: 'sort',
@@ -350,6 +363,12 @@ export default {
   },
 
   computed: {
+    inactiveFilters() {
+      return this.filters.filter(
+        (filter) => !this.activeFilters.includes(filter.name)
+      )
+    },
+
     filterSentence() {
       if (this.activeFilters.length === 0) {
         return 'No filters active'
