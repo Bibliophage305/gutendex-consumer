@@ -7,7 +7,7 @@
             <v-card-title>
               Filters
               <v-spacer />
-              <v-menu left :close-on-content-click="closeOnContentClick">
+              <v-menu left close-on-content-click>
                 <template v-slot:activator="{ on, attrs }">
                   <v-btn color="primary" dark v-bind="attrs" v-on="on">
                     <v-icon left> mdi-plus </v-icon>
